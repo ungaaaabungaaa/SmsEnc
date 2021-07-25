@@ -1,11 +1,10 @@
 package com.example.smsmanger;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import android.Manifest;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.view.View;
@@ -13,8 +12,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
 import com.scottyab.aescrypt.AESCrypt;
 import java.security.GeneralSecurityException;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,15 +29,15 @@ public class MainActivity extends AppCompatActivity {
     String phoneNo;
     String message;
     String password = "HG;_3UGM}34U}H(";
-    TextView textView;
+    Button textView;
     TextView displayen;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        displayen=findViewById(R.id.displayview);
         textView=findViewById(R.id.textView2);
-        displayen=findViewById(R.id.textView2);
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -43,15 +46,29 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-        sendBtn =findViewById(R.id.button);
-        txtphoneNo =findViewById(R.id.editTextTextPersonName2);
-        txtMessage = findViewById(R.id.message);
-        sendBtn.setOnClickListener(new View.OnClickListener() {
-           @Override
-           public void onClick(View v) {
-               sendSMSMessage();
-           }
-       });
+
+        PermissionListener permissionlistener = new PermissionListener() {
+            @Override
+            public void onPermissionGranted() {
+                sendBtn =findViewById(R.id.button);
+                txtphoneNo =findViewById(R.id.editTextTextPersonName2);
+                txtMessage = findViewById(R.id.message);
+                sendBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        sendSMSMessage();
+                    }
+                });
+            }
+
+            @Override
+            public void onPermissionDenied(List<String> deniedPermissions) {
+                Toast.makeText(MainActivity.this, "Permission Denied\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
+            }
+
+        };
+
+        TedPermission.with(this).setPermissionListener(permissionlistener).setDeniedMessage("If you reject permission,you can not use this service\n\nPlease turn on permissions at [Setting] > [Permission]").setPermissions(Manifest.permission.SEND_SMS).check();
 
     }
 
@@ -61,36 +78,22 @@ public class MainActivity extends AppCompatActivity {
         String usermessage = txtMessage.getText().toString();
         try {
              message = AESCrypt.encrypt(password, usermessage);
-             displayen.setText("Decrypt Sms"+"\n"+"Encrypted"+"\n"+message);
+             displayen.setText(message);
+             setClipboard(MainActivity.this,message);
         }catch (GeneralSecurityException e){
         }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.SEND_SMS)) {
-            } else {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.SEND_SMS}, MY_PERMISSIONS_REQUEST_SEND_SMS);
-            }
-        }
+
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode,String permissions[], int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_SEND_SMS: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if (message!=null&& message.equals(""))
-                    {
-                        SmsManager smsManager = SmsManager.getDefault();
-                        smsManager.sendTextMessage("+91"+phoneNo, null, message, null, null);
-                        Toast.makeText(getApplicationContext(), "Sms Sent", Toast.LENGTH_LONG).show();
-                    }
-                    Toast.makeText(getApplicationContext(), "Encryption Failed", Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "SMS faild, please try again.", Toast.LENGTH_LONG).show();
-                    return;
-                }
-            }
-        }
+
+
+    private void setClipboard(Context context, String text) {
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText("label", text);
+        clipboard.setPrimaryClip(clip);
+        SmsManager smsManager = SmsManager.getDefault();
+        smsManager.sendTextMessage("+91"+phoneNo, null, message, null, null);
+        Toast.makeText(getApplicationContext(), "Sms Sent Text Copied To CLip Board", Toast.LENGTH_LONG).show();
 
     }
 

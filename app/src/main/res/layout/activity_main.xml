@@ -100,19 +100,32 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <TextView
+
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/buttonbg"
+        android:paddingStart="@dimen/_28sdp"
+        android:paddingEnd="@dimen/_28sdp"
         android:text="@string/decrypt_sms"
-        android:textColor="#fff"
-        android:layout_marginTop="@dimen/_8sdp"
-        android:textSize="@dimen/_18sdp"
-        android:textAlignment="center"
+        android:textColor="#000"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/constraintLayout" />
 
+
+    <TextView
+        android:id="@+id/displayview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="#fff"
+        android:textSize="@dimen/_18sdp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView2"></TextView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 
